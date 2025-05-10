@@ -9,7 +9,12 @@ def menu():
     print("2. Enviar respaldo específico")
     print("3. Descargar respaldo")
     print("4. Restaurar respaldo")
-    print("5. Salir")
+    print("5. Generar llave asimetrica")
+    print("6. Ver llaves asimetricas")
+    print("7. Exportar llaves asimetricas")
+    print("8. Importar llaves asimetricas")
+    print("9. Enviar respaldo específico Asimetrico")
+    print("0. Salir")
     return input("\nSeleccione una opción: ")
 
 def ejecutar_comando(comando):
@@ -45,6 +50,20 @@ def main():
             passphrase = getpass.getpass("Frase secreta GPG: ")
             ejecutar_comando(f'bash ./ssh-backups/restaurar_base.sh "{nombre}" "{destino}" "{passphrase}"')
         elif opcion == "5":
+            ejecutar_comando("gpg --full-generate-key")
+        elif opcion == "6":
+            ejecutar_comando("gpg -k")
+        elif opcion == "7":
+            ejecutar_comando("gpg --output llaves-exportadas.pub --export")
+            ejecutar_comando("pwd")
+        elif opcion == "8":
+            ejecutar_comando("gpg --import llaves-exportadas.pub")
+        elif opcion == "9":
+            nombre = input("Nombre del respaldo (ej. laboratorio): ")
+            correo = input("Correo: ")
+            ejecutar_comando("gpg -a -r {correo} --encrypt {nombre}")
+            ejecutar_comando(f"bash ./ssh-backups/enviar_bases.sh ferna /home/ferna/backups 100.64.19.50 5000 {nombre}.asc")
+        elif opcion == "0":
             print("👋 Saliendo...")
             break
         else:
