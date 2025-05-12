@@ -215,6 +215,20 @@ Algunas reglas y aspectos relevantes:
 - El modo de depuración explica en texto plano el debbugin.
 - No pueden revocarse permisos, seria neceario modificarlos desde JSON
 
+### Solucion para problemas con LF en LINUX
+```sh
+sed -i 's/\r$//' ./ssh-backups/enviar_bases.sh
+```
+```sh
+sed -i 's/\r$//' ./ssh-backups/descargar_respaldo.sh
+```
+```sh
+sed -i 's/\r$//' ./ssh-backups/restaurar_base.sh
+```
+```sh
+sed -i 's/\r$//' ./ssh-backups/restaurar_base_asimetrico.sh
+```
+
 ## Respaldos cifrados SSH 
 El proceso para crear respaldos de las bases de datos es el siguiente.
 
