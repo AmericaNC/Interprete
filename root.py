@@ -15,6 +15,8 @@ def menu():
     print("8. Importar llaves asimétricas")
     print("9. Enviar respaldo específico Asimétrico")
     print("10. Restaurar respaldo Asimétrico")
+    print("11. Firmar archivo")
+    print("12. Verificar firma de archivo")
     print("0. Salir")
     return input("\nSeleccione una opción: ")
 
@@ -33,6 +35,67 @@ def restaurar_respaldo_asimetrico():
 
     # Ejecutar el script de restauración asimétrica en bash
     comando = f'bash ./ssh-backups/restaurar_base_asimetrico.sh "{nombre}" "{destino}" "{passphrase}"'
+    ejecutar_comando(comando)
+
+def firmar_archivo():
+    archivo = input("Ruta del archivo a firmar: ")
+    
+    if not os.path.exists(archivo):
+        print(f"❌ Error: El archivo '{archivo}' no existe.")
+        return
+    
+    # Mostrar las claves disponibles
+    print("\nClaves disponibles para firmar:")
+    ejecutar_comando("gpg --list-secret-keys")
+    
+    correo = input("\nIngrese el correo/ID de la clave a usar para firmar: ")
+    tipo_firma = input("¿Crear firma separada (s) o archivo firmado (a)? [s/a]: ").lower()
+    
+    if tipo_firma == "s":
+        # Crear firma separada (.sig)
+        archivo_firma = f"{archivo}.sig"
+        comando = f'gpg --output "{archivo_firma}" --detach-sign --local-user "{correo}" "{archivo}"'
+        ejecutar_comando(comando)
+        if os.path.exists(archivo_firma):
+            print(f"✅ Firma creada en: {archivo_firma}")
+    else:
+        # Crear archivo firmado (.asc) con firma en armadura ASCII
+        archivo_firmado = f"{archivo}.asc"
+        comando = f'gpg --output "{archivo_firmado}" --sign --armor --local-user "{correo}" "{archivo}"'
+        ejecutar_comando(comando)
+        if os.path.exists(archivo_firmado):
+            print(f"✅ Archivo firmado creado en: {archivo_firmado}")
+
+def verificar_firma():
+    archivo = input("Ruta del archivo a verificar: ")
+    
+    if not os.path.exists(archivo):
+        print(f"❌ Error: El archivo '{archivo}' no existe.")
+        return
+    
+    # Determinar el tipo de verificación
+    if archivo.endswith(".sig"):
+        # Es una firma separada, necesitamos el archivo original
+        archivo_original = archivo[:-4]  # Quitar la extensión .sig
+        if not os.path.exists(archivo_original):
+            archivo_original = input(f"Archivo original no encontrado. Ingrese la ruta del archivo original: ")
+            if not os.path.exists(archivo_original):
+                print("❌ Error: No se encontró el archivo original.")
+                return
+        
+        comando = f'gpg --verify "{archivo}" "{archivo_original}"'
+    elif archivo.endswith(".asc"):
+        # Es un archivo firmado
+        comando = f'gpg --verify "{archivo}"'
+    else:
+        # Podría ser un archivo original, buscar la firma
+        archivo_firma = f"{archivo}.sig"
+        if os.path.exists(archivo_firma):
+            comando = f'gpg --verify "{archivo_firma}" "{archivo}"'
+        else:
+            print("❌ No se encontró archivo de firma. Intentando verificar directamente...")
+            comando = f'gpg --verify "{archivo}"'
+    
     ejecutar_comando(comando)
 
 def main():
@@ -91,8 +154,12 @@ def main():
             os.remove(f"backups/{archivo_cifrado}")
             print("✅ Respaldo enviado correctamente.")
 
-        elif opcion == "10":  # Nueva opción para restaurar archivos asimétricos
+        elif opcion == "10":
             restaurar_respaldo_asimetrico()
+        elif opcion == "11":
+            firmar_archivo()
+        elif opcion == "12":
+            verificar_firma()
         elif opcion == "0":
             print("👋 Saliendo...")
             break
